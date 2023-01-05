@@ -1,4 +1,4 @@
-const TILE_SIZE = 32;
+const TILE_SIZE = 64;
 const MAP_NUM_ROWS = 11;
 const MAP_NUM_COLS = 15;
 
@@ -26,8 +26,8 @@ class Map {
             for (var j = 0; j < MAP_NUM_COLS; j++) {
                 var tileX = j * TILE_SIZE; 
                 var tileY = i * TILE_SIZE;
-                var tileColor = this.grid[i][j] == 1 ? "#222" : "#fff";
-                stroke("#222");
+                var tileColor = this.grid[i][j] == 1 ? "#222" : "#ccc";
+                stroke("#111");
                 fill(tileColor);
                 rect(tileX, tileY, TILE_SIZE, TILE_SIZE);
             }
@@ -39,7 +39,6 @@ var grid = new Map();
 
 function setup() {
     createCanvas(WINDOW_WIDTH, WINDOW_HEIGHT);
-
 }
 
 function update() {

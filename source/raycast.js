@@ -1,4 +1,6 @@
 const TILE_SIZE = 64;
+const PLAYER_RADIUS = TILE_SIZE / 8;
+const PLAYER_VIEW = PLAYER_RADIUS * 8; 
 const MAP_NUM_ROWS = 11;
 const MAP_NUM_COLS = 15;
 
@@ -22,7 +24,7 @@ class Map {
         ];
     }
 
-    hasWallAt(x,y,r) {
+    checkCollision(x,y,r) {
         if( x - r < 0 || x + r > WINDOW_WIDTH || y - r < 0 || y + r > WINDOW_HEIGHT )
             return true;
 
@@ -32,7 +34,10 @@ class Map {
         var p2x = Math.floor((x+r)/TILE_SIZE);
         var p2y = Math.floor((y+r)/TILE_SIZE);
 
-        return this.grid[p1y][p1x] == 1 || this.grid[p2y][p2x] == 1;
+        return this.grid[p1y][p1x] == 1 || 
+            this.grid[p1y][p2x] == 1 ||
+            this.grid[p2y][p1x] == 1 ||
+            this.grid[p2y][p2x] == 1;
     }
 
     render() {
@@ -53,7 +58,7 @@ class Player {
     constructor() {
         this.x = WINDOW_WIDTH / 2;
         this.y = WINDOW_HEIGHT / 2;
-        this.radius = 4;
+        this.radius = PLAYER_RADIUS;
         this.turnDirection = 0; // -1 if left, +1 if right
         this.walkDirection = 0; // -1 if back, +1 if front
         this.rotationAngle = Math.PI / 2;
@@ -68,11 +73,11 @@ class Player {
         var newX = this.x + Math.cos(this.rotationAngle) * moveStep; 
         var newY = this.y + Math.sin(this.rotationAngle) * moveStep; 
 
-        if( !grid.hasWallAt(newX, this.y, this.radius) ) {
+        if( !grid.checkCollision(newX, this.y, this.radius) ) {
             this.x = newX;
         }
 
-        if( !grid.hasWallAt(this.x, newY, this.radius) ) {
+        if( !grid.checkCollision(this.x, newY, this.radius) ) {
             this.y = newY;
         }
     }
@@ -82,8 +87,8 @@ class Player {
         line(
             this.x, 
             this.y, 
-            this.x + Math.cos(this.rotationAngle) * 32, 
-            this.y +  Math.sin(this.rotationAngle) * 32);
+            this.x + Math.cos(this.rotationAngle) * PLAYER_VIEW, 
+            this.y +  Math.sin(this.rotationAngle) * PLAYER_VIEW);
 
         stroke("#111");
         fill("red");

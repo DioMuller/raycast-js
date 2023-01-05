@@ -8,7 +8,7 @@ const WINDOW_WIDTH = MAP_NUM_COLS * TILE_SIZE;
 const WINDOW_HEIGHT = MAP_NUM_ROWS * TILE_SIZE;
 
 const FOV_ANGLE = 60 * Math.PI/180;
-const RAY_DETAIL_WIDTH = 32;
+const RAY_DETAIL_WIDTH = 1;
 const NUM_RAYS = WINDOW_WIDTH / RAY_DETAIL_WIDTH;
 const RAY_INCREMENT = FOV_ANGLE / NUM_RAYS;
 
@@ -117,11 +117,15 @@ class Ray {
         let wallHitX = 0;
         let wallHitY = 0;
 
-        yintercept = (Math.floor(player.y / TILE_SIZE) * TILE_SIZE) + (this.isRayFacingDown ? TILE_SIZE : 0);
+        yintercept = (Math.floor(player.y / TILE_SIZE) * TILE_SIZE);
+        yintercept += (this.isRayFacingDown ? TILE_SIZE : 0);
         xintercept = player.x + (yintercept - player.y) / Math.tan(this.rayAngle);
 
-        ystep = TILE_SIZE * (this.isRayFacingUp ? -1 : 1);
-        xstep = (TILE_SIZE / Math.tan(this.rayAngle)) * ((this.isRayFacingRight && xstep < 0) || (this.isRayFacingLeft && xstep > 0) ? -1 : 1);
+        ystep = TILE_SIZE;
+        ystep *= (this.isRayFacingUp ? -1 : 1);
+        xstep = TILE_SIZE / Math.tan(this.rayAngle);
+        xstep *= (this.isRayFacingLeft && xstep > 0) ? -1 : 1;
+        xstep *= (this.isRayFacingRight && xstep < 0) ? -1 : 1;
 
         let nextHorizontalTouchX = xintercept;
         let nextHorizontalTouchY = yintercept;

@@ -22,6 +22,19 @@ class Map {
         ];
     }
 
+    hasWallAt(x,y,r) {
+        if( x - r < 0 || x + r > WINDOW_WIDTH || y - r < 0 || y + r > WINDOW_HEIGHT )
+            return true;
+
+        var p1x = Math.floor((x-r)/TILE_SIZE);
+        var p1y = Math.floor((y-r)/TILE_SIZE);
+
+        var p2x = Math.floor((x+r)/TILE_SIZE);
+        var p2y = Math.floor((y+r)/TILE_SIZE);
+
+        return this.grid[p1y][p1x] == 1 || this.grid[p2y][p2x] == 1;
+    }
+
     render() {
         for (var i = 0; i < MAP_NUM_ROWS; i++) {
             for (var j = 0; j < MAP_NUM_COLS; j++) {
@@ -52,8 +65,16 @@ class Player {
         this.rotationAngle += (this.turnDirection * this.rotationSpeed);
 
         var moveStep = this.walkDirection * this.moveSpeed;
-        this.x += Math.cos(this.rotationAngle) * moveStep; 
-        this.y += Math.sin(this.rotationAngle) * moveStep; 
+        var newX = this.x + Math.cos(this.rotationAngle) * moveStep; 
+        var newY = this.y + Math.sin(this.rotationAngle) * moveStep; 
+
+        if( !grid.hasWallAt(newX, this.y, this.radius) ) {
+            this.x = newX;
+        }
+
+        if( !grid.hasWallAt(this.x, newY, this.radius) ) {
+            this.y = newY;
+        }
     }
 
     render() {
@@ -63,7 +84,8 @@ class Player {
             this.y, 
             this.x + Math.cos(this.rotationAngle) * 32, 
             this.y +  Math.sin(this.rotationAngle) * 32);
-            
+
+        stroke("#111");
         fill("red");
         circle(this.x, this.y, this.radius);
     }

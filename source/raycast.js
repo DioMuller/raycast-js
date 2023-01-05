@@ -33,11 +33,11 @@ class Map {
         if( x - r < 0 || x + r > WINDOW_WIDTH || y - r < 0 || y + r > WINDOW_HEIGHT )
             return true;
 
-        var p1x = Math.floor((x-r)/TILE_SIZE);
-        var p1y = Math.floor((y-r)/TILE_SIZE);
+        let p1x = Math.floor((x-r)/TILE_SIZE);
+        let p1y = Math.floor((y-r)/TILE_SIZE);
 
-        var p2x = Math.floor((x+r)/TILE_SIZE);
-        var p2y = Math.floor((y+r)/TILE_SIZE);
+        let p2x = Math.floor((x+r)/TILE_SIZE);
+        let p2y = Math.floor((y+r)/TILE_SIZE);
 
         return this.grid[p1y][p1x] == 1 || 
             this.grid[p1y][p2x] == 1 ||
@@ -46,11 +46,11 @@ class Map {
     }
 
     render() {
-        for (var i = 0; i < MAP_NUM_ROWS; i++) {
-            for (var j = 0; j < MAP_NUM_COLS; j++) {
-                var tileX = j * TILE_SIZE; 
-                var tileY = i * TILE_SIZE;
-                var tileColor = this.grid[i][j] == 1 ? "#222" : "#ccc";
+        for (let i = 0; i < MAP_NUM_ROWS; i++) {
+            for (let j = 0; j < MAP_NUM_COLS; j++) {
+                let tileX = j * TILE_SIZE; 
+                let tileY = i * TILE_SIZE;
+                let tileColor = this.grid[i][j] == 1 ? "#222" : "#ccc";
                 stroke("#111");
                 fill(tileColor);
                 rect(tileX, tileY, TILE_SIZE, TILE_SIZE);
@@ -74,9 +74,9 @@ class Player {
     update() {
         this.rotationAngle += (this.turnDirection * this.rotationSpeed);
 
-        var moveStep = this.walkDirection * this.moveSpeed;
-        var newX = this.x + Math.cos(this.rotationAngle) * moveStep; 
-        var newY = this.y + Math.sin(this.rotationAngle) * moveStep; 
+        let moveStep = this.walkDirection * this.moveSpeed;
+        let newX = this.x + Math.cos(this.rotationAngle) * moveStep; 
+        let newY = this.y + Math.sin(this.rotationAngle) * moveStep; 
 
         if( !grid.checkCollision(newX, this.y, this.radius) ) {
             this.x = newX;
@@ -96,17 +96,58 @@ class Player {
 
 class Ray {
     constructor(rayAngle) {
-        this.rayAngle = rayAngle;
+        this.rayAngle = normalizeAngle(rayAngle);
+        this.wallHitX = 0;
+        this.wallHitY = 0;
+        this.distance = 0;
+
+        this.isRayFacingDown = this.rayAngle > 0 && this.rayAngle < Math.PI;
+        this.isRayFacingUp = !this.isRayFacingDown;
+
+        this.isRayFacingRight = this.rayAngle < 0.5 * Math.PI || this.rayAngle > 1.5 * Math.PI;
+        this.isRayFacingLeft = !this.isRayFacingRight;
+    }
+
+    cast(columnId) {
+        let xintercept, yintercept;
+        let xstep, ystep;
+
+        // HORIZONTAL RAY-GRID INTERSECTION
+        let foundHorizontalWallHit = false;
+        let wallHitX = 0;
+        let wallHitY = 0;
+
+        yintercept = (Math.floor(player.y / TILE_SIZE) * TILE_SIZE) + (this.isRayFacingDown ? TILE_SIZE : 0);
+        xintercept = player.x + (yintercept - player.y) / Math.tan(this.rayAngle);
+
+        ystep = TILE_SIZE * (this.isRayFacingUp ? -1 : 1);
+        xstep = (TILE_SIZE / Math.tan(this.rayAngle)) * ((this.isRayFacingRight && xstep < 0) || (this.isRayFacingLeft && xstep > 0) ? -1 : 1);
+
+        let nextHorizontalTouchX = xintercept;
+        let nextHorizontalTouchY = yintercept;
+
+        if( this.isRayFacingUp) nextHorizontalTouchY--;
+
+        while(!foundHorizontalWallHit) {
+            if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY, 1)) {
+                foundHorizontalWallHit = true;
+                wallHitX = nextHorizontalTouchX;
+                wallHitY = nextHorizontalTouchY;
+
+                // Test 
+                this.wallHitX = wallHitX;
+                this.wallHitY = wallHitY;
+
+            } else {
+                nextHorizontalTouchX += xstep;
+                nextHorizontalTouchY += ystep;
+            }
+        }
     }
 
     render() {
         stroke("#09f");
-        line(
-            player.x, 
-            player.y, 
-            player.x + Math.cos(this.rayAngle) * PLAYER_VIEW,
-            player.y + Math.sin(this.rayAngle) * PLAYER_VIEW
-        );
+        line(player.x, player.y, this.wallHitX,this.wallHitY);
     }
 }
 
@@ -145,12 +186,19 @@ function castAllRays() {
     rays = [];
 
     for(let i = 0; i < NUM_RAYS; i++) {
-        var ray = new Ray(rayAngle);
-        // ray.cast();
+        let ray = new Ray(rayAngle);
+        ray.cast(columnId);
         rays.push(ray);
         rayAngle += (RAY_INCREMENT);
         columnId++;
     }
+}
+
+function normalizeAngle(angle) {
+    angle = angle % (2 * Math.PI);
+    if( angle < 0 ) angle += (2*Math.PI);
+
+    return angle;
 }
 
 function setup() {

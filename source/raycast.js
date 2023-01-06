@@ -114,8 +114,8 @@ class Ray {
 
         // HORIZONTAL RAY-GRID INTERSECTION
         let foundHorizontalWallHit = false;
-        let wallHitX = 0;
-        let wallHitY = 0;
+        let horizontalWallHitX = 0;
+        let horizontalWallHitY = 0;
 
         yintercept = (Math.floor(player.y / TILE_SIZE) * TILE_SIZE);
         yintercept += (this.isRayFacingDown ? TILE_SIZE : 0);
@@ -135,17 +135,54 @@ class Ray {
         while(!foundHorizontalWallHit) {
             if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY, 1)) {
                 foundHorizontalWallHit = true;
-                wallHitX = nextHorizontalTouchX;
-                wallHitY = nextHorizontalTouchY;
-
-                // Test 
-                this.wallHitX = wallHitX;
-                this.wallHitY = wallHitY;
-
+                horizontalWallHitX = nextHorizontalTouchX;
+                horizontalWallHitY = nextHorizontalTouchY;
             } else {
                 nextHorizontalTouchX += xstep;
                 nextHorizontalTouchY += ystep;
             }
+        }
+
+        // VERTICAL RAY-GRID INTERSECTION
+        let foundVerticalWallHit = false;
+        let verticalWallHitX = 0;
+        let verticalWallHitY = 0;
+
+        xintercept = (Math.floor(player.x / TILE_SIZE) * TILE_SIZE);
+        xintercept += (this.isRayFacingRight ? TILE_SIZE : 0);
+        yintercept = player.y + (xintercept - player.x) * Math.tan(this.rayAngle);
+
+        xstep = TILE_SIZE;
+        xstep *= (this.isRayFacingLeft ? -1 : 1);
+        ystep = TILE_SIZE * Math.tan(this.rayAngle);
+        ystep *= (this.isRayFacingUp && ystep > 0) ? -1 : 1;
+        ystep *= (this.isRayFacingDown && ystep < 0) ? -1 : 1;
+
+        let nextVerticalTouchX = xintercept;
+        let nextVerticalTouchY = yintercept;
+
+        if( this.isRayFacingLeft) nextVerticalTouchX--;
+
+        while(!foundVerticalWallHit) {
+            if( grid.checkCollision(nextVerticalTouchX, nextVerticalTouchY, 1)) {
+                foundVerticalWallHit = true;
+                verticalWallHitX = nextVerticalTouchX;
+                verticalWallHitY = nextVerticalTouchY;
+            } else {
+                nextVerticalTouchX += xstep;
+                nextVerticalTouchY += ystep;
+            }
+        }
+
+        // Calculate the closest hit
+        let distHorizontal = dist(horizontalWallHitX, horizontalWallHitY, player.x, player.y);
+        let distVertical = dist(verticalWallHitX, verticalWallHitY, player.x, player.y);
+        if(distHorizontal < distVertical ){
+            this.wallHitX = horizontalWallHitX;
+            this.wallHitY = horizontalWallHitY;
+        } else {
+            this.wallHitX = verticalWallHitX;
+            this.wallHitY = verticalWallHitY;
         }
     }
 
@@ -203,6 +240,10 @@ function normalizeAngle(angle) {
     if( angle < 0 ) angle += (2*Math.PI);
 
     return angle;
+}
+
+function dist(x1, y1, x2, y2) {
+    return Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
 }
 
 function setup() {

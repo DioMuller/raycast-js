@@ -100,6 +100,7 @@ class Ray {
         this.wallHitX = 0;
         this.wallHitY = 0;
         this.distance = 0;
+        this.wasHitVertical = false;
 
         this.isRayFacingDown = this.rayAngle > 0 && this.rayAngle < Math.PI;
         this.isRayFacingUp = !this.isRayFacingDown;
@@ -130,10 +131,8 @@ class Ray {
         let nextHorizontalTouchX = xintercept;
         let nextHorizontalTouchY = yintercept;
 
-        if( this.isRayFacingUp) nextHorizontalTouchY--;
-
         while(!foundHorizontalWallHit) {
-            if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY, 1)) {
+            if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY - (this.isRayFacingUp ? 1 : 0), 1)) {
                 foundHorizontalWallHit = true;
                 horizontalWallHitX = nextHorizontalTouchX;
                 horizontalWallHitY = nextHorizontalTouchY;
@@ -161,10 +160,8 @@ class Ray {
         let nextVerticalTouchX = xintercept;
         let nextVerticalTouchY = yintercept;
 
-        if( this.isRayFacingLeft) nextVerticalTouchX--;
-
         while(!foundVerticalWallHit) {
-            if( grid.checkCollision(nextVerticalTouchX, nextVerticalTouchY, 1)) {
+            if( grid.checkCollision(nextVerticalTouchX - (this.isRayFacingLeft ? 1 : 0), nextVerticalTouchY, 1)) {
                 foundVerticalWallHit = true;
                 verticalWallHitX = nextVerticalTouchX;
                 verticalWallHitY = nextVerticalTouchY;
@@ -177,12 +174,16 @@ class Ray {
         // Calculate the closest hit
         let distHorizontal = dist(horizontalWallHitX, horizontalWallHitY, player.x, player.y);
         let distVertical = dist(verticalWallHitX, verticalWallHitY, player.x, player.y);
+
+        // Pick the closest hit.
         if(distHorizontal < distVertical ){
             this.wallHitX = horizontalWallHitX;
             this.wallHitY = horizontalWallHitY;
+            this.wasHitVertical = false;
         } else {
             this.wallHitX = verticalWallHitX;
             this.wallHitY = verticalWallHitY;
+            this.wasHitVertical = true;
         }
     }
 

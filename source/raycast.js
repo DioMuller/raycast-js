@@ -154,7 +154,7 @@ class Ray {
         let nextHorizontalTouchY = yintercept;
 
         while(!foundHorizontalWallHit) {
-            if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY - (this.isRayFacingUp ? 1 : 0), 1)) {
+            if( grid.checkCollision(nextHorizontalTouchX, nextHorizontalTouchY - (this.isRayFacingUp ? 1 : 0), 0)) {
                 foundHorizontalWallHit = true;
                 horizontalWallHitX = nextHorizontalTouchX;
                 horizontalWallHitY = nextHorizontalTouchY;
@@ -183,7 +183,7 @@ class Ray {
         let nextVerticalTouchY = yintercept;
 
         while(!foundVerticalWallHit) {
-            if( grid.checkCollision(nextVerticalTouchX - (this.isRayFacingLeft ? 1 : 0), nextVerticalTouchY, 1)) {
+            if( grid.checkCollision(nextVerticalTouchX - (this.isRayFacingLeft ? 1 : 0), nextVerticalTouchY, 0)) {
                 foundVerticalWallHit = true;
                 verticalWallHitX = nextVerticalTouchX;
                 verticalWallHitY = nextVerticalTouchY;

@@ -280,7 +280,7 @@ function renderProjectedWalls() {
         let alphaOffset = 1 / (rayDistance / SHADE_FACTOR) ;
         let colorOffset = ray.wasHitVertical ? VERTICAL_SHADE_OFFSET : HORIZONTAL_SHADE_OFFSET;
 
-        fillForWall(grid.getValue(ray.wallHitX, ray.wallHitY), colorOffset, alphaOffset);
+        fillForWall(grid.getValue(ray.wallHitX - (ray.isRayFacingLeft ? 1 : 0), ray.wallHitY - (ray.isRayFacingUp ? 1 : 0)), colorOffset, alphaOffset);
         noStroke();
         rect(i * RAY_DETAIL_WIDTH,
             (WINDOW_HEIGHT/2) - (wallHeight/2),
@@ -324,7 +324,7 @@ function fillForWall(wallType, colorOffset, alphaOffset ) {
             fill(255 * colorOffset,
                 255 * colorOffset,
                 255 * colorOffset,
-                255 * alphaOffset
+                0 * alphaOffset
             );
             break;
     }

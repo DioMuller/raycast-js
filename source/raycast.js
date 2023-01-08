@@ -12,13 +12,17 @@ const RAY_DETAIL_WIDTH = 1;
 const NUM_RAYS = WINDOW_WIDTH / RAY_DETAIL_WIDTH;
 const RAY_INCREMENT = FOV_ANGLE / NUM_RAYS;
 
+const MINIMAP_SCALE_FACTOR = 0.2;
+
+const DISTANCE_PROJECTION_PLANE = (WINDOW_WIDTH / 2) / Math.tan(FOV_ANGLE / 2);
+
 class Map {
     constructor() {
         this.grid = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            [1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+            [1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -53,7 +57,11 @@ class Map {
                 let tileColor = this.grid[i][j] == 1 ? "#222" : "#ccc";
                 stroke("#111");
                 fill(tileColor);
-                rect(tileX, tileY, TILE_SIZE, TILE_SIZE);
+                rect(tileX * MINIMAP_SCALE_FACTOR, 
+                    tileY * MINIMAP_SCALE_FACTOR, 
+                    TILE_SIZE * MINIMAP_SCALE_FACTOR, 
+                    TILE_SIZE * MINIMAP_SCALE_FACTOR
+                );
             }
         }
     }
@@ -90,7 +98,10 @@ class Player {
     render() {
         stroke("#111");
         fill("red");
-        circle(this.x, this.y, this.radius);
+        circle(this.x * MINIMAP_SCALE_FACTOR, 
+            this.y * MINIMAP_SCALE_FACTOR, 
+            this.radius * MINIMAP_SCALE_FACTOR
+        );
     }
 }
 
@@ -179,17 +190,23 @@ class Ray {
         if(distHorizontal < distVertical ){
             this.wallHitX = horizontalWallHitX;
             this.wallHitY = horizontalWallHitY;
+            this.distance = distHorizontal;
             this.wasHitVertical = false;
         } else {
             this.wallHitX = verticalWallHitX;
             this.wallHitY = verticalWallHitY;
+            this.distance = distVertical;
             this.wasHitVertical = true;
         }
     }
 
     render() {
         stroke("#09f");
-        line(player.x, player.y, this.wallHitX,this.wallHitY);
+        line(player.x * MINIMAP_SCALE_FACTOR, 
+            player.y * MINIMAP_SCALE_FACTOR, 
+            this.wallHitX * MINIMAP_SCALE_FACTOR,
+            this.wallHitY * MINIMAP_SCALE_FACTOR
+        );
     }
 }
 
@@ -243,6 +260,23 @@ function normalizeAngle(angle) {
     return angle;
 }
 
+function renderProjectedWalls() {
+    for( let i = 0; i < NUM_RAYS; i++ ) {
+        let ray = rays[i];
+
+        let rayDistance = ray.distance;
+        let wallHeight = (TILE_SIZE / rayDistance) * DISTANCE_PROJECTION_PLANE;
+
+        fill("rgba(255, 255, 255, 1.0)");
+        noStroke();
+        rect(i * RAY_DETAIL_WIDTH,
+            (WINDOW_HEIGHT/2) - (wallHeight/2),
+            RAY_DETAIL_WIDTH,
+            wallHeight
+        );
+    }
+}
+
 function dist(x1, y1, x2, y2) {
     return Math.sqrt(((x2-x1) * (x2-x1)) + ((y2-y1) * (y2-y1)));
 }
@@ -258,6 +292,16 @@ function update() {
 
 function draw() {
     update();
+
+    clear();
+    fill("#222");
+    noStroke();
+    rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT /2);
+
+    fill("#666");
+    noStroke();
+    rect(0, WINDOW_HEIGHT/2, WINDOW_WIDTH, WINDOW_HEIGHT /2);
+    renderProjectedWalls();
 
     grid.render();
     for(ray of rays) {

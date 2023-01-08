@@ -8,12 +8,15 @@ const WINDOW_WIDTH = MAP_NUM_COLS * TILE_SIZE;
 const WINDOW_HEIGHT = MAP_NUM_ROWS * TILE_SIZE;
 
 const FOV_ANGLE = 60 * Math.PI/180;
-const RAY_DETAIL_WIDTH = 8;
+const RAY_DETAIL_WIDTH = 1;
 const NUM_RAYS = WINDOW_WIDTH / RAY_DETAIL_WIDTH;
 const RAY_INCREMENT = FOV_ANGLE / NUM_RAYS;
 
 const MINIMAP_SCALE_FACTOR = 0.2;
-const SHADE_FACTOR = 200;
+const SHADE_FACTOR = 170;
+
+const VERTICAL_SHADE_OFFSET = 1.0;
+const HORIZONTAL_SHADE_OFFSET = 0.75;
 
 const DISTANCE_PROJECTION_PLANE = (WINDOW_WIDTH / 2) / Math.tan(FOV_ANGLE / 2);
 
@@ -48,6 +51,13 @@ class Map {
             this.grid[p1y][p2x] != 0 ||
             this.grid[p2y][p1x] != 0 ||
             this.grid[p2y][p2x] != 0;
+    }
+
+    getValue(x,y) {
+        let p1x = Math.floor(x/TILE_SIZE);
+        let p1y = Math.floor(y/TILE_SIZE);
+
+        return this.grid[p1y][p1x];
     }
 
     render() {
@@ -188,16 +198,17 @@ class Ray {
         let distVertical = dist(verticalWallHitX, verticalWallHitY, player.x, player.y);
 
         // Pick the closest hit.
-        if(distHorizontal < distVertical ){
-            this.wallHitX = horizontalWallHitX;
-            this.wallHitY = horizontalWallHitY;
-            this.distance = distHorizontal;
-            this.wasHitVertical = false;
-        } else {
+        if(distVertical <= distHorizontal ){
             this.wallHitX = verticalWallHitX;
             this.wallHitY = verticalWallHitY;
             this.distance = distVertical;
             this.wasHitVertical = true;
+
+        } else {
+            this.wallHitX = horizontalWallHitX;
+            this.wallHitY = horizontalWallHitY;
+            this.distance = distHorizontal;
+            this.wasHitVertical = false;
         }
     }
 
@@ -240,17 +251,14 @@ function keyReleased() {
 }
 
 function castAllRays() {
-    let columnId = 0;
-
     let rayAngle = player.rotationAngle - (FOV_ANGLE / 2);
     rays = [];
 
     for(let i = 0; i < NUM_RAYS; i++) {
         let ray = new Ray(rayAngle);
-        ray.cast(columnId);
+        ray.cast(i);
         rays.push(ray);
         rayAngle += (RAY_INCREMENT);
-        columnId++;
     }
 }
 
@@ -267,15 +275,58 @@ function renderProjectedWalls() {
 
         let rayDistance = ray.distance * Math.cos(ray.rayAngle - player.rotationAngle);
         let wallHeight = (TILE_SIZE / rayDistance) * DISTANCE_PROJECTION_PLANE;
-        let shade = 1 / (rayDistance / SHADE_FACTOR);
-        
-        fill(255 * shade, 255 * shade, 255 * shade);
+        let alpha = SHADE_FACTOR / rayDistance;
+
+        let alphaOffset = 1 / (rayDistance / SHADE_FACTOR) ;
+        let colorOffset = ray.wasHitVertical ? VERTICAL_SHADE_OFFSET : HORIZONTAL_SHADE_OFFSET;
+
+        fillForWall(grid.getValue(ray.wallHitX, ray.wallHitY), colorOffset, alphaOffset);
         noStroke();
         rect(i * RAY_DETAIL_WIDTH,
             (WINDOW_HEIGHT/2) - (wallHeight/2),
             RAY_DETAIL_WIDTH,
             wallHeight
         );
+    }
+}
+
+function fillForWall(wallType, colorOffset, alphaOffset ) {
+    switch(wallType) {
+        case 1:
+            fill(255 * colorOffset,
+                255 * colorOffset,
+                255 * colorOffset,
+                255 * alphaOffset
+            );
+            break;
+        case 2:
+            fill(255 * colorOffset,
+                0 * colorOffset,
+                0 * colorOffset,
+                255 * alphaOffset
+            );
+            break;
+        case 3:
+            fill(0 * colorOffset,
+                255 * colorOffset,
+                0 * colorOffset,
+                255 * alphaOffset
+            );
+            break;
+        case 4:
+            fill(0 * colorOffset,
+                0 * colorOffset,
+                255 * colorOffset,
+                255 * alphaOffset
+            );
+            break;
+        default:
+            fill(255 * colorOffset,
+                255 * colorOffset,
+                255 * colorOffset,
+                255 * alphaOffset
+            );
+            break;
     }
 }
 
@@ -296,13 +347,6 @@ function draw() {
     update();
 
     clear();
-    fill("#666");
-    noStroke();
-    rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT /2);
-
-    fill("#248");
-    noStroke();
-    rect(0, WINDOW_HEIGHT/2, WINDOW_WIDTH, WINDOW_HEIGHT /2);
     renderProjectedWalls();
 
     grid.render();

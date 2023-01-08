@@ -8,7 +8,7 @@ const WINDOW_WIDTH = MAP_NUM_COLS * TILE_SIZE;
 const WINDOW_HEIGHT = MAP_NUM_ROWS * TILE_SIZE;
 
 const FOV_ANGLE = 60 * Math.PI/180;
-const RAY_DETAIL_WIDTH = 1;
+const RAY_DETAIL_WIDTH = 8;
 const NUM_RAYS = WINDOW_WIDTH / RAY_DETAIL_WIDTH;
 const RAY_INCREMENT = FOV_ANGLE / NUM_RAYS;
 
@@ -20,14 +20,14 @@ class Map {
     constructor() {
         this.grid = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
-            [1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1],
+            [1, 0, 0, 4, 0, 4, 0, 0, 0, 0, 0, 0, 3, 0, 1],
+            [1, 0, 4, 4, 4, 0, 0, 0, 0, 0, 3, 0, 3, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
+            [1, 2, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
@@ -43,10 +43,10 @@ class Map {
         let p2x = Math.floor((x+r)/TILE_SIZE);
         let p2y = Math.floor((y+r)/TILE_SIZE);
 
-        return this.grid[p1y][p1x] == 1 || 
-            this.grid[p1y][p2x] == 1 ||
-            this.grid[p2y][p1x] == 1 ||
-            this.grid[p2y][p2x] == 1;
+        return this.grid[p1y][p1x] != 0 || 
+            this.grid[p1y][p2x] != 0 ||
+            this.grid[p2y][p1x] != 0 ||
+            this.grid[p2y][p2x] != 0;
     }
 
     render() {
@@ -54,7 +54,7 @@ class Map {
             for (let j = 0; j < MAP_NUM_COLS; j++) {
                 let tileX = j * TILE_SIZE; 
                 let tileY = i * TILE_SIZE;
-                let tileColor = this.grid[i][j] == 1 ? "#222" : "#ccc";
+                let tileColor = this.grid[i][j] == 0 ? "#ccc" : "#222";
                 stroke("#111");
                 fill(tileColor);
                 rect(tileX * MINIMAP_SCALE_FACTOR, 
@@ -264,7 +264,7 @@ function renderProjectedWalls() {
     for( let i = 0; i < NUM_RAYS; i++ ) {
         let ray = rays[i];
 
-        let rayDistance = ray.distance;
+        let rayDistance = ray.distance * Math.cos(ray.rayAngle - player.rotationAngle);
         let wallHeight = (TILE_SIZE / rayDistance) * DISTANCE_PROJECTION_PLANE;
 
         fill("rgba(255, 255, 255, 1.0)");
@@ -294,11 +294,11 @@ function draw() {
     update();
 
     clear();
-    fill("#222");
+    fill("#666");
     noStroke();
     rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT /2);
 
-    fill("#666");
+    fill("#248");
     noStroke();
     rect(0, WINDOW_HEIGHT/2, WINDOW_WIDTH, WINDOW_HEIGHT /2);
     renderProjectedWalls();

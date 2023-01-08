@@ -13,6 +13,7 @@ const NUM_RAYS = WINDOW_WIDTH / RAY_DETAIL_WIDTH;
 const RAY_INCREMENT = FOV_ANGLE / NUM_RAYS;
 
 const MINIMAP_SCALE_FACTOR = 0.2;
+const SHADE_FACTOR = 200;
 
 const DISTANCE_PROJECTION_PLANE = (WINDOW_WIDTH / 2) / Math.tan(FOV_ANGLE / 2);
 
@@ -266,8 +267,9 @@ function renderProjectedWalls() {
 
         let rayDistance = ray.distance * Math.cos(ray.rayAngle - player.rotationAngle);
         let wallHeight = (TILE_SIZE / rayDistance) * DISTANCE_PROJECTION_PLANE;
-
-        fill("rgba(255, 255, 255, 1.0)");
+        let shade = 1 / (rayDistance / SHADE_FACTOR);
+        
+        fill(255 * shade, 255 * shade, 255 * shade);
         noStroke();
         rect(i * RAY_DETAIL_WIDTH,
             (WINDOW_HEIGHT/2) - (wallHeight/2),
